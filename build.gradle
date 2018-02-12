@@ -1,0 +1,60 @@
+import org.jetbrains.kotlin.config.KotlinCompilerVersion
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+plugins {
+    id "io.morethan.jmhreport" version "0.7.0"
+}
+
+group 'fjp.benchmark'
+apply plugin: "kotlin-platform-jvm"
+
+// Report Kotlin compiler version when building project
+println("Using Kotlin compiler version: $KotlinCompilerVersion.VERSION")
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+	compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.openjdk.jmh:jmh-generator-annprocess:1.19"
+	testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
+    testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
+	testCompile "junit:junit:$junit_version"
+}
+
+jmhReport {
+    jmhResultPath = project.file("$buildDir/jmh-result.json")
+    jmhReportOutput = project.file(buildDir)
+}
+
+task runJMH(type: JavaExec) {
+    main = "benchmark.BenchJava"
+    classpath sourceSets.main.runtimeClasspath
+}
+tasks.runJMH.finalizedBy tasks.jmhReport
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+kotlin.experimental.coroutines "enable"
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
