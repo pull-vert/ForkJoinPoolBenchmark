@@ -1,5 +1,6 @@
 package coroutines.experimental
 
+import co.paralleluniverse.strands.Strand
 import kotlin.coroutines.experimental.AbstractCoroutineContextElement
 import kotlin.coroutines.experimental.CoroutineContext
 
@@ -28,21 +29,21 @@ internal inline fun <T> withCoroutineContext(context: CoroutineContext, block: (
     }
 }
 
-internal val CoroutineContext.coroutineName: String? get() {
-    if (!DEBUG) return null
-    val coroutineId = this[CoroutineId] ?: return null
-    val coroutineName = this[CoroutineName]?.name ?: "coroutine"
-    return "$coroutineName#${coroutineId.id}"
-}
+//internal val CoroutineContext.coroutineName: String? get() {
+//    if (!DEBUG) return null
+//    val coroutineId = this[CoroutineId] ?: return null
+//    val coroutineName = this[CoroutineName]?.name ?: "coroutine"
+//    return "$coroutineName#${coroutineId.id}"
+//}
 
 @PublishedApi
 internal fun CoroutineContext.updateThreadContext(): String? {
     if (!DEBUG) return null
     val coroutineId = this[CoroutineId] ?: return null
     val coroutineName = this[CoroutineName]?.name ?: "coroutine"
-    val currentThread = Thread.currentThread()
-    val oldName = currentThread.name
-    currentThread.name = buildString(oldName.length + coroutineName.length + 10) {
+    val currentStrand = Strand.currentStrand()
+    val oldName = currentStrand.name
+    currentStrand.name = buildString(oldName.length + coroutineName.length + 10) {
         append(oldName)
         append(" @")
         append(coroutineName)
@@ -54,7 +55,7 @@ internal fun CoroutineContext.updateThreadContext(): String? {
 
 @PublishedApi
 internal fun restoreThreadContext(oldName: String?) {
-    if (oldName != null) Thread.currentThread().name = oldName
+    if (oldName != null) Strand.currentStrand().name = oldName
 }
 
 private class CoroutineId(val id: Long) : AbstractCoroutineContextElement(CoroutineId) {
